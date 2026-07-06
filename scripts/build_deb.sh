@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_DIR="${ROOT_DIR}/.build"
 PKG_ROOT="${BUILD_DIR}/pkgroot"
 PKG_NAME="lg-tv-tools"
-VERSION="0.1.3"
+VERSION="0.2.0"
 ARCH="all"
 OUT_DEB="${BUILD_DIR}/${PKG_NAME}_${VERSION}_${ARCH}.deb"
 
@@ -46,9 +46,9 @@ Version: ${VERSION}
 Section: utils
 Priority: optional
 Architecture: ${ARCH}
-Maintainer: Dantes de la Calle Frexes (Reyam) <rey.amado8509@gmail.com>
+Maintainer: Reynaldo  Rodriguez (Reyam) <rey.amado8509@gmail.com>
 Depends: python3, python3-pyqt6
-Description: KDE Plasma utility to discover LG TVs and launch casting workflows
+Description: Description: LG webOS discovery and DLNA media casting utility for Linux desktops
  LG TV Tools discovers LG TVs on the local network and provides a GUI for
  media casting, desktop mirroring launchers, diagnostics, and KDE integration.
 EOF

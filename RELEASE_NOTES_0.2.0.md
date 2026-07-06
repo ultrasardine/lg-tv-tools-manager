@@ -1,6 +1,6 @@
-# LG TV Tools 0.1.3
+# LG TV Tools 0.2.0
 
-LG TV Tools 0.1.3 focuses on stability, packaging, and clearer diagnostics.
+LG TV Tools 0.2.0 focuses on stability, packaging, and clearer diagnostics.
 
 ## Highlights
 

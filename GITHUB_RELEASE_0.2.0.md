@@ -1,6 +1,6 @@
-# LG TV Tools 0.1.3
+# LG TV Tools 0.2.0
 
-LG TV Tools 0.1.3 is a stability and packaging release for KDE Plasma on Kali Linux.
+LG TV Tools 0.2.0 is a stability and packaging release for KDE Plasma on Kali Linux.
 
 ## Highlights
 
@@ -18,13 +18,13 @@ LG TV Tools 0.1.3 is a stability and packaging release for KDE Plasma on Kali Li
 
 ## Downloads
 
-- `lg-tv-tools_0.1.3_all.deb`
-- `lg-tv-tools_0.1.3_all.deb.sha256`
+- `lg-tv-tools_0.2.0_all.deb`
+- `lg-tv-tools_0.2.0_all.deb.sha256`
 
 ## Verification
 
 ```bash
-sha256sum -c lg-tv-tools_0.1.3_all.deb.sha256
+sha256sum -c lg-tv-tools_0.2.0_all.deb.sha256
 ```
 
 ## Release signing

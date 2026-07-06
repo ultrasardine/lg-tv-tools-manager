@@ -4,12 +4,18 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lg-tv-tools"
-version = "0.1.3"
-description = "KDE Plasma utility to discover LG TVs and launch casting workflows"
+version = "0.2.0"
+description = "LG webOS discovery and DLNA media casting utility for Linux desktops"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["PyQt6>=6.6"]
-authors = [{ name = "Dantes de la Calle Frexes", email = "rey.amado8509@gmail.com" }]
+
+dependencies = [
+    "PyQt6>=6.6"
+]
+
+authors = [
+    { name = "Reynaldo Rodríguez", email = "rey.amado8509@gmail.com" }
+]
 
 [project.scripts]
 lg-tv-tools = "lgtvtools.app:main"
