@@ -1,0 +1,14 @@
+Source: lg-tv-tools
+Section: utils
+Priority: optional
+Maintainer: Dantes de la Calle Frexes (Reyam) <rey.amado8509@gmail.com>
+Build-Depends: debhelper-compat (= 13), dh-python, python3, python3-pyqt6
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: lg-tv-tools
+Architecture: all
+Depends: ${misc:Depends}, ${python3:Depends}, python3-pyqt6
+Description: KDE Plasma utility to discover LG TVs and launch casting workflows
+ LG TV Tools discovers LG TVs on the local network and provides a GUI for
+ media casting, desktop mirroring launchers, diagnostics, and KDE integration.

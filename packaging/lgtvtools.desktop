@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=LG TV Tools
+Comment=Discover LG TVs and launch casting workflows
+GenericName=LG TV casting utility
+X-Author=Dantes de la Calle Frexes (Reyam)
+X-AuthorEmail=rey.amado8509@gmail.com
+X-AppVersion=0.1.3
+X-AppID=lg-tv-tools
+Exec=lg-tv-tools
+Icon=lg-tv-tools
+Terminal=false
+Categories=Utility;Network;AudioVideo;
+StartupNotify=true

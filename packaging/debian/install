@@ -1,0 +1,3 @@
+src/lgtvtools /usr/lib/python3/dist-packages/
+packaging/lgtvtools.desktop usr/share/applications/
+src/lgtvtools/resources/icons/app.svg usr/share/icons/hicolor/scalable/apps/lg-tv-tools.svg
