@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 import socket
 import urllib.request
+import mimetypes
+import xml.sax.saxutils
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from enum import Enum
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 from .models import LGTVDevice
 
@@ -49,33 +52,42 @@ class UPnPResult:
         return self.status == UPnPStatus.OK
 
 
-def _device_xml(device: LGTVDevice) -> ET.Element | None:
+def _device_xml(url: str) -> ET.Element | None:
     try:
-        with urllib.request.urlopen(device.location, timeout=3) as response:
+        with urllib.request.urlopen(url, timeout=3) as response:
             return ET.fromstring(response.read().decode("utf-8", "ignore"))
     except Exception:
-        LOGGER.debug("Failed to load device description for %s", device.location, exc_info=True)
+        LOGGER.debug("Failed to load device description for %s", url, exc_info=True)
         return None
 
 
 def get_upnp_services(device: LGTVDevice) -> list[UPnPService]:
-    root = _device_xml(device)
-    if root is None:
-        return []
+    xml_cache: dict[str, ET.Element] = {}
     services: list[UPnPService] = []
-    base_url = device.location.rsplit("/", 1)[0] + "/"
-    for service in root.findall(".//d:service", NS):
-        service_type = service.findtext("d:serviceType", default="", namespaces=NS)
-        control = service.findtext("d:controlURL", default="", namespaces=NS)
-        service_id = service.findtext("d:serviceId", default="", namespaces=NS)
-        if service_type and control:
-            services.append(
-                UPnPService(
-                    service_type=service_type,
-                    control_url=urljoin(base_url, control),
-                    service_id=service_id,
-                )
-            )
+    seen_services: set[tuple[str, str]] = set()
+    
+    for location in device.locations:
+        root = xml_cache.get(location) or _device_xml(location)
+        if root is None:
+            continue
+        xml_cache[location] = root
+        
+        base_url = location.rsplit("/", 1)[0] + "/"
+        for service in root.findall(".//d:service", NS):
+            service_type = service.findtext("d:serviceType", default="", namespaces=NS)
+            control = service.findtext("d:controlURL", default="", namespaces=NS)
+            service_id = service.findtext("d:serviceId", default="", namespaces=NS)
+            if service_type and control:
+                service_key = (service_type, control)
+                if service_key not in seen_services:
+                    seen_services.add(service_key)
+                    services.append(
+                        UPnPService(
+                            service_type=service_type,
+                            control_url=urljoin(base_url, control),
+                            service_id=service_id,
+                        )
+                    )
     return services
 
 
@@ -99,7 +111,10 @@ def _soap_action(control_url: str, service_type: str, action: str, arguments: di
         f'<u:{action} xmlns:u="{service_type}">',
     ]
     for key, value in arguments.items():
-        envelope.append(f"<{key}>{value}</{key}>")
+        if key == "CurrentURIMetaData":
+            envelope.append(f"<{key}>{xml.sax.saxutils.escape(value)}</{key}>")
+        else:
+            envelope.append(f"<{key}>{value}</{key}>")
     envelope.extend([f"</u:{action}>", "</s:Body>", "</s:Envelope>"])
     body = "".join(envelope).encode("utf-8")
     req = urllib.request.Request(
@@ -120,6 +135,48 @@ def _soap_action(control_url: str, service_type: str, action: str, arguments: di
         return False, str(exc)
 
 
+def _generate_didl_lite(media_url: str, filename: str) -> str:
+    mime_map = {
+        ".mkv": "video/x-matroska",
+        ".avi": "video/x-msvideo",
+        ".mp4": "video/mp4",
+        ".mp3": "audio/mpeg",
+        ".flac": "audio/flac",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+    }
+
+    ext = Path(urlparse(media_url).path).suffix.lower()
+    mime_type = mime_map.get(ext)
+    if not mime_type:
+        mime_type, _ = mimetypes.guess_type(media_url)
+
+    mime_type = mime_type or "application/octet-stream"
+
+    if mime_type.startswith("video/"):
+        upnp_class = "object.item.videoItem"
+    elif mime_type.startswith("audio/"):
+        upnp_class = "object.item.audioItem"
+    elif mime_type.startswith("image/"):
+        upnp_class = "object.item.imageItem"
+    else:
+        upnp_class = "object.item"
+
+    protocol_info = f"http-get:*:{mime_type}:*"
+
+    return (
+        '<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" '
+        'xmlns:dc="http://purl.org/dc/elements/1.1/" '
+        'xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">'
+        f'<item id="0" parentID="0" restricted="1">'
+        f'<dc:title>{xml.sax.saxutils.escape(filename)}</dc:title>'
+        f'<upnp:class>{upnp_class}</upnp:class>'
+        f'<res protocolInfo="{protocol_info}">{xml.sax.saxutils.escape(media_url)}</res>'
+        '</item></DIDL-Lite>'
+    )
+
+
 def cast_media_to_device(device: LGTVDevice, media_url: str, title: str = "LG TV Tools") -> UPnPResult:
     if not media_url.startswith("http://") and not media_url.startswith("https://"):
         return UPnPResult(UPnPStatus.INVALID_URL, "La URL de media no es HTTP/HTTPS")
@@ -134,7 +191,7 @@ def cast_media_to_device(device: LGTVDevice, media_url: str, title: str = "LG TV
         {
             "InstanceID": "0",
             "CurrentURI": media_url,
-            "CurrentURIMetaData": "",
+            "CurrentURIMetaData": _generate_didl_lite(media_url, title),
         },
     )
     if not set_ok:
@@ -148,3 +205,4 @@ def cast_media_to_device(device: LGTVDevice, media_url: str, title: str = "LG TV
     if not play_ok:
         return UPnPResult(UPnPStatus.PLAY_FAILED, f"Play falló: {play_err}", av_transport)
     return UPnPResult(UPnPStatus.OK, f"UPnP OK: {title}", av_transport)
+

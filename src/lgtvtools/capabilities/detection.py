@@ -20,14 +20,17 @@ KNOWN = {
     "rygel": "sudo apt install rygel",
     "pulseaudio": "sudo apt install pulseaudio",
     "pipewire": "sudo apt install pipewire",
-    "miraclecast": "sudo apt install miraclecast",
+    "miraclecast": "Install MiracleCast (legacy) or miracle-wifid (modern builds).",
 }
 
 
 def detect_capabilities() -> list[Capability]:
     result: list[Capability] = []
     for name, hint in KNOWN.items():
-        path = shutil.which(name)
+        if name == "miraclecast":
+            path = shutil.which("miraclecast") or shutil.which("miracle-wifid")
+        else:
+            path = shutil.which(name)
         result.append(Capability(name=name, installed=bool(path), path=path, hint=hint))
     return result
 

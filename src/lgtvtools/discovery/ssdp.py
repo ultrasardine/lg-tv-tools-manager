@@ -36,7 +36,9 @@ def _manufacturer_filter_enabled() -> bool:
 
 
 def discover_lg_tvs(timeout: float = 3.0) -> list[LGTVDevice]:
-    devices: dict[str, LGTVDevice] = {}
+    # Phase 1: Collect all unique logical devices
+    logical_devices: dict[str, LGTVDevice] = {}
+    
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
     sock.settimeout(0.5)
@@ -57,49 +59,90 @@ def discover_lg_tvs(timeout: float = 3.0) -> list[LGTVDevice]:
             usn = headers.get("usn", location or server)
             if "lg" not in (server + " " + location + " " + usn).lower():
                 continue
+            
+            # Use USN as unique key for initial collection
+            if usn in logical_devices:
+                continue
+            
             parsed = urlparse(location)
             ip = parsed.hostname or ""
-            name = headers.get("friendlyname", "") or headers.get("name", "") or "LG TV"
-            model = headers.get("modelname", "") or headers.get("model", "")
-            services = [headers.get("st", ""), headers.get("nt", "")]
+            
             device = LGTVDevice(
                 usn=usn,
-                name=name,
+                name=headers.get("friendlyname", "") or headers.get("name", "") or "LG TV",
                 ip=ip,
                 location=location,
-                model=model,
+                model=headers.get("modelname", "") or headers.get("model", ""),
                 server=server,
-                friendly_name=name,
-                services=[s for s in services if s],
+                friendly_name=headers.get("friendlyname", "") or headers.get("name", "") or "LG TV",
+                services=[s for s in [headers.get("st", ""), headers.get("nt", "")] if s],
             )
+            
+            # Enrich from XML
             if location:
                 try:
                     with urlopen(location, timeout=2) as response:
-                        xml = response.read().decode("utf-8", "ignore")
-                    root = ET.fromstring(xml)
+                        xml_data = response.read()
+                        root = ET.fromstring(xml_data.decode("utf-8", "ignore"))
                     ns = {"d": "urn:schemas-upnp-org:device-1-0"}
                     friendly = root.findtext(".//d:friendlyName", default="", namespaces=ns)
-                    model = root.findtext(".//d:modelName", default=model, namespaces=ns)
+                    model_xml = root.findtext(".//d:modelName", default="", namespaces=ns)
                     manufacturer = root.findtext(".//d:manufacturer", default="", namespaces=ns)
+                    
                     if friendly:
                         device.name = friendly
                         device.friendly_name = friendly
-                    if model:
-                        device.model = model
+                    if model_xml:
+                        device.model = model_xml
+                    
                     if _manufacturer_filter_enabled() and manufacturer and "lg" not in manufacturer.lower():
                         continue
-                    svc_names = []
+                    
                     for svc in root.findall(".//d:service", {"d": "urn:schemas-upnp-org:device-1-0"}):
                         service_type = svc.findtext("d:serviceType", default="", namespaces={"d": "urn:schemas-upnp-org:device-1-0"})
                         if service_type:
-                            svc_names.append(service_type.rsplit(":", 1)[-1])
-                    if svc_names:
-                        device.services = svc_names
+                            svc_short = service_type.rsplit(":", 1)[-1]
+                            if svc_short and svc_short not in device.services:
+                                device.services.append(svc_short)
                 except Exception:
-                    LOGGER.debug("Could not enrich device from %s", location, exc_info=True)
-            devices[usn] = device
+                    LOGGER.debug("Could not enrich device %s", usn, exc_info=True)
+            
+            logical_devices[usn] = device
     finally:
         sock.close()
 
-    LOGGER.info("SSDP discovered %d LG candidate devices", len(devices))
-    return list(devices.values())
+    # Phase 2: Consolidate by IP
+    physical_devices: dict[str, LGTVDevice] = {}
+    
+    for dev in logical_devices.values():
+        ip = dev.ip
+        if not ip:
+            # Fallback for devices without IP (unlikely for LG TV)
+            ip = dev.location 
+            
+        if ip in physical_devices:
+            # Merge into existing physical device
+            p_dev = physical_devices[ip]
+            if dev.location:
+                p_dev.locations.add(dev.location)
+            
+            # Keep the friendliest name
+            if dev.name != "LG TV" and (p_dev.name == "LG TV" or len(dev.name) > len(p_dev.name)):
+                p_dev.name = dev.name
+                p_dev.friendly_name = dev.friendly_name
+            
+            # Keep model if available
+            if dev.model and not p_dev.model:
+                p_dev.model = dev.model
+                
+            # Merge services without duplicates
+            for svc in dev.services:
+                if svc not in p_dev.services:
+                    p_dev.services.append(svc)
+        else:
+            physical_devices[ip] = dev
+
+    LOGGER.info("SSDP discovered %d logical and %d physical LG devices", 
+                len(logical_devices), len(physical_devices))
+    
+    return list(physical_devices.values())
