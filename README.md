@@ -9,7 +9,7 @@ LG TV Tools is a KDE Plasma utility for Kali Linux that discovers LG televisions
 ## Author
 
 - Author: Reynaldo Rodríguez
-- User: Reyam
+- User: reyam
 - Email: rey.amado8509@gmail.com
 
 ## Features
