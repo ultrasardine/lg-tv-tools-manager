@@ -1,5 +1,9 @@
 # LG TV Tools
 
+<p align="center">
+  <img src="assets/screenshots/lg-main.png" alt="LG TV Tools Main Window" width="100%">
+</p>
+
 LG TV Tools is a KDE Plasma utility for Kali Linux that discovers LG televisions on the local network and provides a compact workflow for screen mirroring, desktop casting, and media handoff.
 
 ## Author
