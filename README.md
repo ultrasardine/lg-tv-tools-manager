@@ -10,7 +10,11 @@ LG TV Tools is a KDE Plasma utility for Kali Linux that discovers LG televisions
 
 - Author: Reynaldo Rodríguez
 - User: reyam
-- Email: rey.amado8509@gmail.com
+- Portfolio: [Reynaldo8509](https://github.com/Reynaldo8509)
+
+## Security / Networking Relevance
+
+This project demonstrates practical Linux desktop development and network-service troubleshooting around **SSDP, UPnP, AVTransport, DLNA and local-network discovery**. It complements the SOC portfolio by showing hands-on work with network protocols, service discovery, diagnostics and Linux integration.
 
 ## Features
 
@@ -110,7 +114,6 @@ bash scripts/smoke_test.sh
 If you publish signed releases, sign the `.deb` with GPG and keep the release version fixed before tagging.
 
 Current release target: `0.2.0`
-Release signing key: `88228B125455C0B7644DB1A9320D6B571195D41C`
 
 ## Limitations
 
