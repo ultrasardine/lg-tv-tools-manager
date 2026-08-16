@@ -5,4 +5,4 @@ lg-tv-tools (0.2.0) unstable; urgency=medium
   * Improved SSDP device detection.
   * Fixed DLNA SetAVTransportURI metadata serialization.
   * Improved media sharing compatibility.
- --Reynaldo Rodriguez (Reyam) <rey.amado8509@gmail.com>  Sun, 05 Jul 2026 00:00:00 +0000
+ --Reynaldo Rodriguez (Reyam) <noreply@users.noreply.github.com>  Sun, 05 Jul 2026 00:00:00 +0000

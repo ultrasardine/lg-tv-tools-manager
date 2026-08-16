@@ -11,7 +11,6 @@ Name=LG TV Tools
 Comment=Discover LG TVs and launch casting workflows
 GenericName=LG TV casting utility
 X-Author=Reynaldo Rodríguez (Reyam)
-X-AuthorEmail=rey.amado8509@gmail.com
 X-AppVersion=0.2.0
 X-AppID=lg-tv-tools
 Exec={exec_path}
