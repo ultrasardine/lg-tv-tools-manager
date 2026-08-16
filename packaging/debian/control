@@ -1,7 +1,7 @@
 Source: lg-tv-tools
 Section: utils
 Priority: optional
-Maintainer: Reynaldo Rodríguez <rey.amado8509@gmail.com>
+Maintainer: Reynaldo Rodríguez <noreply@users.noreply.github.com>
 Build-Depends: debhelper-compat (= 13), dh-python, python3, python3-pyqt6
 Standards-Version: 4.6.2
 Rules-Requires-Root: no

@@ -46,7 +46,7 @@ Version: ${VERSION}
 Section: utils
 Priority: optional
 Architecture: ${ARCH}
-Maintainer: Reynaldo  Rodriguez (Reyam) <rey.amado8509@gmail.com>
+Maintainer: Reynaldo  Rodriguez (Reyam) <noreply@users.noreply.github.com>
 Depends: python3, python3-pyqt6
 Description: Description: LG webOS discovery and DLNA media casting utility for Linux desktops
  LG TV Tools discovers LG TVs on the local network and provides a GUI for

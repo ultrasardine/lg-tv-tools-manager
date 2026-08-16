@@ -22,7 +22,7 @@ Release: `0.2.0`
 
 - Author: `Reynaldo Rodríguez`
 - User: `Reyam`
-- Email: `rey.amado8509@gmail.com`
+- Contact: GitHub Issues
 - Version: `0.2.0`
 
 ## Publish notes

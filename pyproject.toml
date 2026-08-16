@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 authors = [
-    { name = "Reynaldo Rodríguez", email = "rey.amado8509@gmail.com" }
+    { name = "Reynaldo Rodríguez" }
 ]
 
 [project.scripts]
