@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .paths import desktop_entry_path, data_dir
-
+from .paths import data_dir, desktop_entry_path
 
 DESKTOP_TEMPLATE = """[Desktop Entry]
 Type=Application

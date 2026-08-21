@@ -4,14 +4,14 @@ import functools
 import logging
 import os
 import shutil
+import socket
 import socketserver
 import tempfile
 import threading
-import socket
-import struct
-import fcntl
 from http.server import SimpleHTTPRequestHandler
 from pathlib import Path
+
+import netifaces
 
 LOGGER = logging.getLogger(__name__)
 
@@ -28,36 +28,34 @@ class MediaShareServer:
         self._root = Path(tempfile.mkdtemp(prefix="lg-tv-tools-share-"))
         self.port = 0
 
-    def _get_default_interface(self) -> str | None:
-        """Reads /proc/net/route to find the default gateway interface."""
+    def _get_host_ip(self) -> str:
+        """Detects the host's LAN IPv4 address (cross-platform)."""
+        # Method 1: Use netifaces to find the default gateway interface IP
         try:
-            with open("/proc/net/route", "r") as f:
-                for line in f.readlines()[1:]:
-                    fields = line.strip().split()
-                    if fields[1] == '00000000':
-                        return fields[0]
+            gateways = netifaces.gateways()
+            default_gw = gateways.get("default", {}).get(netifaces.AF_INET)
+            if default_gw:
+                iface = default_gw[1]
+                addrs = netifaces.ifaddresses(iface)
+                ipv4_addrs = addrs.get(netifaces.AF_INET, [])
+                if ipv4_addrs:
+                    ip = ipv4_addrs[0].get("addr", "")
+                    if ip and not ip.startswith("127."):
+                        return ip
         except Exception:
-            pass
-        return None
+            LOGGER.debug("netifaces gateway lookup failed", exc_info=True)
 
-    def _get_ip_for_interface(self, ifname: str) -> str | None:
-        """Uses ioctl to get the IPv4 address of an interface."""
+        # Method 2: Connect to an external address to determine outbound IP
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            ifreq = struct.pack('16sH2x4s8x', ifname.encode('utf-8'), socket.AF_INET, b'\x00' * 4)
-            res = fcntl.ioctl(s.fileno(), 0x8915, ifreq)
-            ip = struct.unpack('16sH2x4s8x', res)[2]
-            return socket.inet_ntoa(ip)
-        except Exception:
-            return None
-
-    def _get_host_ip(self) -> str:
-        """Detects the host's LAN IPv4 address using local routing table."""
-        ifname = self._get_default_interface()
-        if ifname:
-            ip = self._get_ip_for_interface(ifname)
-            if ip:
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+            s.close()
+            if ip and not ip.startswith("127."):
                 return ip
+        except Exception:
+            LOGGER.debug("Socket connect trick failed", exc_info=True)
+
         return "127.0.0.1"
 
     def _ensure_server(self) -> None:

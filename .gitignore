@@ -18,3 +18,7 @@ coverage.xml
 *.asc
 *.sha256
 .DS_Store
+
+# others
+.kiro/
+.hypothesis/

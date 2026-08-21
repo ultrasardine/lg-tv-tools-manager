@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
-import socket
-import urllib.request
 import mimetypes
-import xml.sax.saxutils
+import urllib.request
 import xml.etree.ElementTree as ET
+import xml.sax.saxutils
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
 from .models import LGTVDevice
@@ -195,7 +194,7 @@ def cast_media_to_device(device: LGTVDevice, media_url: str, title: str = "LG TV
         },
     )
     if not set_ok:
-        return UPnPResult(UPnPStatus.SET_FAILED, f"SetAVTransportURI falló: {set_err}", av_transport)
+        return UPnPResult(UPnPStatus.SET_FAILED, f"SetAVTransportURI failed: {set_err}", av_transport)
     play_ok, play_err = _soap_action(
         av_transport.control_url,
         av_transport.service_type,
@@ -203,6 +202,6 @@ def cast_media_to_device(device: LGTVDevice, media_url: str, title: str = "LG TV
         {"InstanceID": "0", "Speed": "1"},
     )
     if not play_ok:
-        return UPnPResult(UPnPStatus.PLAY_FAILED, f"Play falló: {play_err}", av_transport)
+        return UPnPResult(UPnPStatus.PLAY_FAILED, f"Play failed: {play_err}", av_transport)
     return UPnPResult(UPnPStatus.OK, f"UPnP OK: {title}", av_transport)
 

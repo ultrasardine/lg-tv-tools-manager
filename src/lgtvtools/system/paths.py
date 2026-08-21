@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
 import os
-
+from pathlib import Path
 
 APP_NAME = "LG TV Tools"
 APP_ID = "lg-tv-tools"
