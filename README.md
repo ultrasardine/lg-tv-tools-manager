@@ -4,9 +4,25 @@
   <img src="assets/screenshots/lg-main.png" alt="LG TV Tools Main Window" width="100%">
 </p>
 
+[![CI](https://github.com/ultrasardine/lg-tv-tools-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/ultrasardine/lg-tv-tools-manager/actions/workflows/ci.yml)
+[![Release](https://github.com/ultrasardine/lg-tv-tools-manager/actions/workflows/release.yml/badge.svg)](https://github.com/ultrasardine/lg-tv-tools-manager/actions/workflows/release.yml)
+[![GitHub release](https://img.shields.io/github/v/release/ultrasardine/lg-tv-tools-manager)](https://github.com/ultrasardine/lg-tv-tools-manager/releases/latest)
+
 LG TV Tools is a cross-platform application for discovering and controlling LG televisions on your local network. Built with Flet for desktop and mobile support, it provides screen mirroring, URL casting, media handoff, and direct TV remote control.
 
 **Version: 0.3.0**
+
+## Downloads
+
+Pre-built executables are available for each platform:
+
+| Platform | Download |
+|----------|----------|
+| Windows | [lg-tv-tools-windows-x64.zip](https://github.com/ultrasardine/lg-tv-tools-manager/releases/latest/download/lg-tv-tools-windows-x64.zip) |
+| macOS (Apple Silicon) | [lg-tv-tools-macos-arm64.tar.gz](https://github.com/ultrasardine/lg-tv-tools-manager/releases/latest/download/lg-tv-tools-macos-arm64.tar.gz) |
+| Linux | [lg-tv-tools-linux-x64.tar.gz](https://github.com/ultrasardine/lg-tv-tools-manager/releases/latest/download/lg-tv-tools-linux-x64.tar.gz) |
+
+Or install via pip/uv (see [Installation](#installation) below).
 
 ## Author
 
