@@ -48,6 +48,19 @@ VENDOR_BIN_DIR = SPEC_DIR / 'vendor' / 'bin'
 if VENDOR_BIN_DIR.exists():
     datas.append((str(VENDOR_BIN_DIR), 'vendor/bin'))
 
+# Include Flet data files (icons.json etc.) that PyInstaller misses
+try:
+    import importlib.util
+    _flet_spec = importlib.util.find_spec('flet')
+    if _flet_spec and _flet_spec.origin:
+        _flet_pkg_dir = Path(_flet_spec.origin).parent
+        _flet_data_files = list(_flet_pkg_dir.rglob('*.json'))
+        for _f in _flet_data_files:
+            _rel = _f.relative_to(_flet_pkg_dir)
+            datas.append((str(_f), str(Path('flet') / _rel.parent)))
+except Exception:
+    pass
+
 # Hidden imports that PyInstaller might miss
 hiddenimports = [
     # Core modules
