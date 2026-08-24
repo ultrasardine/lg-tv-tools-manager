@@ -54,6 +54,7 @@ class MainView:
         self.page = page
         self.state_manager = state_manager
         self._desktop_actions: DesktopActions | None = None
+        self._mirror_session = None
 
         # Initialize desktop actions if on desktop
         if state_manager.runtime.is_desktop:
@@ -167,12 +168,49 @@ class MainView:
         )
 
     async def start_mirror(self) -> None:
-        """Start or stop screen mirroring."""
-        if not self._desktop_actions:
+        """Start or stop screen mirroring via the built-in HLS pipeline."""
+        device = self.state_manager.state.selected_device
+        if not device:
             return
 
-        # Use native mirroring
-        await self._desktop_actions.start_native_mirror()
+        # If already mirroring, stop it
+        if self.state_manager.state.is_mirroring and self._mirror_session:
+            self.state_manager.log("Stopping mirror...")
+            await asyncio.to_thread(self._mirror_session.stop)
+            self._mirror_session = None
+            self.state_manager.set_mirroring(False)
+            self.state_manager.log("Mirror stopped")
+            return
+
+        # Start the HLS mirror pipeline
+        import sys
+
+        from lgtvtools.mirror.models import CaptureSource
+        from lgtvtools.mirror.session import MirrorSession
+
+        # Default to full desktop capture on Windows, :0.0 on Linux, "1" on macOS
+        if sys.platform == "win32":
+            source = CaptureSource(id="desktop", name="Desktop", kind="screen")
+        elif sys.platform == "darwin":
+            source = CaptureSource(id="1", name="Screen 1", kind="screen")
+        else:
+            source = CaptureSource(id=":0.0", name="Display :0", kind="screen")
+
+        self.state_manager.log("Starting mirror...")
+        self.state_manager.set_connection_status("Starting mirror...")
+
+        session = MirrorSession(device_ip=device.ip, source=source)
+        result = await asyncio.to_thread(session.start)
+
+        if result.ok:
+            self._mirror_session = session
+            self.state_manager.set_mirroring(True)
+            self.state_manager.log(f"Mirroring to {device.name}")
+            self.state_manager.set_connection_status("Mirroring")
+        else:
+            self.state_manager.log(f"Mirror failed: {result.message}")
+            self.state_manager.set_connection_status("Mirror failed")
+            await show_error_dialog(self.page, "Mirror Failed", result.message)
 
     def show_remote(self) -> None:
         """Show the remote control overlay."""
@@ -445,5 +483,8 @@ class MainView:
 
     def cleanup(self) -> None:
         """Clean up resources."""
+        if self._mirror_session:
+            self._mirror_session.stop()
+            self._mirror_session = None
         if self._desktop_actions:
             self._desktop_actions.cleanup()

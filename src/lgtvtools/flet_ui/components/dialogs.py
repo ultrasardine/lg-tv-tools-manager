@@ -114,7 +114,11 @@ async def show_url_input_dialog(
                 url = "http://" + url
             result = url
             if on_submit:
-                on_submit(url)
+                import inspect
+
+                ret = on_submit(url)
+                if inspect.isawaitable(ret):
+                    page.run_task(lambda: ret)
         close_dialog()
 
     def on_submit_field(e: ft.ControlEvent) -> None:
