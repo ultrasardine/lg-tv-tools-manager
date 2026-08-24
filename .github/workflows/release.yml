@@ -2,14 +2,20 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to release (e.g., 0.3.0)'
-        required: true
-        type: string
+      release_type:
+        description: 'Release type (auto, patch, minor, major)'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - patch
+          - minor
+          - major
 
 permissions:
   contents: write
@@ -19,8 +25,111 @@ env:
   PYTHON_VERSION: "3.11"
 
 jobs:
+  # Determine if a release is needed based on commits
+  check-release:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+      new_version: ${{ steps.check.outputs.new_version }}
+      release_type: ${{ steps.check.outputs.release_type }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: latest_tag
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "Latest tag: $LATEST_TAG"
+
+      - name: Analyze commits for release
+        id: check
+        run: |
+          LATEST_TAG="${{ steps.latest_tag.outputs.tag }}"
+          MANUAL_TYPE="${{ inputs.release_type }}"
+          
+          # Get commits since last tag
+          if [ "$LATEST_TAG" = "v0.0.0" ]; then
+            COMMITS=$(git log --oneline)
+          else
+            COMMITS=$(git log ${LATEST_TAG}..HEAD --oneline)
+          fi
+          
+          echo "Commits since $LATEST_TAG:"
+          echo "$COMMITS"
+          
+          # Determine release type from commits (conventional commits)
+          HAS_BREAKING=false
+          HAS_FEAT=false
+          HAS_FIX=false
+          
+          if echo "$COMMITS" | grep -qiE "^[a-f0-9]+ (feat|fix|perf|refactor|docs|style|test|chore)(\(.+\))?!:"; then
+            HAS_BREAKING=true
+          fi
+          if echo "$COMMITS" | grep -qiE "BREAKING CHANGE:"; then
+            HAS_BREAKING=true
+          fi
+          if echo "$COMMITS" | grep -qiE "^[a-f0-9]+ feat(\(.+\))?:"; then
+            HAS_FEAT=true
+          fi
+          if echo "$COMMITS" | grep -qiE "^[a-f0-9]+ fix(\(.+\))?:"; then
+            HAS_FIX=true
+          fi
+          
+          # Determine release type
+          if [ "$MANUAL_TYPE" != "" ] && [ "$MANUAL_TYPE" != "auto" ]; then
+            RELEASE_TYPE="$MANUAL_TYPE"
+          elif [ "$HAS_BREAKING" = true ]; then
+            RELEASE_TYPE="major"
+          elif [ "$HAS_FEAT" = true ]; then
+            RELEASE_TYPE="minor"
+          elif [ "$HAS_FIX" = true ]; then
+            RELEASE_TYPE="patch"
+          else
+            RELEASE_TYPE="none"
+          fi
+          
+          echo "Release type: $RELEASE_TYPE"
+          
+          # Calculate new version
+          CURRENT_VERSION="${LATEST_TAG#v}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+          MAJOR=${MAJOR:-0}
+          MINOR=${MINOR:-0}
+          PATCH=${PATCH:-0}
+          
+          case "$RELEASE_TYPE" in
+            major)
+              NEW_VERSION="$((MAJOR + 1)).0.0"
+              ;;
+            minor)
+              NEW_VERSION="${MAJOR}.$((MINOR + 1)).0"
+              ;;
+            patch)
+              NEW_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
+              ;;
+            *)
+              NEW_VERSION=""
+              ;;
+          esac
+          
+          if [ -n "$NEW_VERSION" ]; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+            echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
+            echo "New version will be: v$NEW_VERSION"
+          else
+            echo "should_release=false" >> $GITHUB_OUTPUT
+            echo "No release needed"
+          fi
+
   # Build standalone executables for each platform
   build-executables:
+    needs: check-release
+    if: needs.check-release.outputs.should_release == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -79,7 +188,6 @@ jobs:
         if: matrix.platform == 'macos'
         run: |
           cd dist
-          # If .app bundle exists, package that; otherwise package the executable
           if [ -d "${{ env.APP_NAME }}.app" ]; then
             tar -czvf ${{ matrix.artifact_name }}${{ matrix.asset_ext }} "${{ env.APP_NAME }}.app"
           else
@@ -101,6 +209,8 @@ jobs:
 
   # Build Python package (sdist and wheel)
   build-python:
+    needs: check-release
+    if: needs.check-release.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -124,22 +234,14 @@ jobs:
           path: dist/
           retention-days: 7
 
-  # Create GitHub Release
+  # Create GitHub Release with tag
   release:
-    needs: [build-executables, build-python]
+    needs: [check-release, build-executables, build-python]
+    if: needs.check-release.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Get version
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
-          else
-            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-          fi
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -149,13 +251,20 @@ jobs:
       - name: List artifacts
         run: find artifacts -type f
 
+      - name: Create tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${{ needs.check-release.outputs.new_version }}" -m "Release v${{ needs.check-release.outputs.new_version }}"
+          git push origin "v${{ needs.check-release.outputs.new_version }}"
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.version.outputs.version }}
-          name: LG TV Tools v${{ steps.version.outputs.version }}
+          tag_name: v${{ needs.check-release.outputs.new_version }}
+          name: LG TV Tools v${{ needs.check-release.outputs.new_version }}
           draft: false
-          prerelease: ${{ contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'beta') || contains(steps.version.outputs.version, 'rc') }}
+          prerelease: false
           generate_release_notes: true
           files: |
             artifacts/lg-tv-tools-linux-x64/*.tar.gz
