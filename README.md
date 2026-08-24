@@ -1,9 +1,5 @@
 # LG TV Tools
 
-<p align="center">
-  <img src="assets/screenshots/lg-main.png" alt="LG TV Tools Main Window" width="100%">
-</p>
-
 [![CI](https://github.com/ultrasardine/lg-tv-tools-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/ultrasardine/lg-tv-tools-manager/actions/workflows/ci.yml)
 [![Release](https://github.com/ultrasardine/lg-tv-tools-manager/actions/workflows/release.yml/badge.svg)](https://github.com/ultrasardine/lg-tv-tools-manager/actions/workflows/release.yml)
 [![GitHub release](https://img.shields.io/github/v/release/ultrasardine/lg-tv-tools-manager)](https://github.com/ultrasardine/lg-tv-tools-manager/releases/latest)
