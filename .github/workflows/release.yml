@@ -173,6 +173,10 @@ jobs:
         shell: pwsh
         run: .\scripts\fetch_ffmpeg_windows.ps1
 
+      - name: Download ffmpeg for bundling (Unix)
+        if: matrix.platform != 'windows'
+        run: bash scripts/fetch_ffmpeg_unix.sh
+
       - name: Build executable (Unix)
         if: matrix.platform != 'windows'
         run: |
