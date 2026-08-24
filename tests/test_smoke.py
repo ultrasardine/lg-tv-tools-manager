@@ -18,7 +18,7 @@ def test_package_version() -> None:
 
 def test_core_imports() -> None:
     """Test that core module imports work."""
-    from lgtvtools.core import LGTVDevice, WebOSResult, Runtime, discover_lg_tvs
+    from lgtvtools.core import LGTVDevice, Runtime, WebOSResult, discover_lg_tvs
 
     assert LGTVDevice is not None
     assert WebOSResult is not None
@@ -29,16 +29,13 @@ def test_core_imports() -> None:
 def test_core_models() -> None:
     """Test core model imports."""
     from lgtvtools.core.models import (
-        LGTVDevice,
-        WebOSResult,
-        UPnPResult,
-        UPnPStatus,
-        MirrorState,
-        CaptureSource,
-        CaptureConfig,
-        MirrorResult,
-        Capability,
         AppState,
+        CaptureConfig,
+        CaptureSource,
+        LGTVDevice,
+        MirrorState,
+        UPnPStatus,
+        WebOSResult,
     )
 
     # Test LGTVDevice
@@ -95,7 +92,7 @@ def test_core_discovery_imports() -> None:
     """Test discovery module imports."""
     from lgtvtools.core.discovery import discover_lg_tvs, discover_lg_tvs_ssdp
     from lgtvtools.core.discovery.ssdp import discover_lg_tvs as ssdp_discover
-    from lgtvtools.core.discovery.upnp import cast_media_to_device, UPnPService
+    from lgtvtools.core.discovery.upnp import UPnPService, cast_media_to_device
 
     assert callable(discover_lg_tvs)
     assert callable(discover_lg_tvs_ssdp)
@@ -107,11 +104,11 @@ def test_core_discovery_imports() -> None:
 def test_core_webos_imports() -> None:
     """Test WebOS client imports."""
     from lgtvtools.core.webos import (
-        WebOSClient,
-        connect_to_tv,
+        APP_BROWSER,
         SSAP_LAUNCH,
         SSAP_TOAST,
-        APP_BROWSER,
+        WebOSClient,
+        connect_to_tv,
     )
 
     assert WebOSClient is not None
@@ -123,7 +120,7 @@ def test_core_webos_imports() -> None:
 
 def test_desktop_imports() -> None:
     """Test desktop module imports."""
-    from lgtvtools.desktop import launch_external, MediaShareServer
+    from lgtvtools.desktop import MediaShareServer, launch_external
 
     assert callable(launch_external)
     assert MediaShareServer is not None
@@ -132,11 +129,11 @@ def test_desktop_imports() -> None:
 def test_desktop_launchers() -> None:
     """Test desktop launcher functions."""
     from lgtvtools.desktop.actions.launchers import (
-        which,
+        LaunchResult,
         launch_external,
         open_file_with_default_app,
         open_url_in_browser,
-        LaunchResult,
+        which,
     )
 
     assert callable(which)
@@ -163,8 +160,8 @@ def test_desktop_media_share() -> None:
 def test_flet_ui_imports() -> None:
     """Test Flet UI module imports."""
     from lgtvtools.flet_ui import AppTheme
-    from lgtvtools.flet_ui.theme import AppColors, Styles
     from lgtvtools.flet_ui.state import StateManager, UIState
+    from lgtvtools.flet_ui.theme import AppColors, Styles
 
     assert AppTheme is not None
     assert AppColors.BACKGROUND == "#111319"
@@ -175,8 +172,8 @@ def test_flet_ui_imports() -> None:
 
 def test_flet_state_manager() -> None:
     """Test Flet state manager."""
-    from lgtvtools.flet_ui.state import StateManager
     from lgtvtools.core.models import LGTVDevice
+    from lgtvtools.flet_ui.state import StateManager
 
     manager = StateManager()
     assert manager.state is not None

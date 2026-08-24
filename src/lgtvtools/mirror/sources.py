@@ -172,13 +172,7 @@ def _is_screen_device(name: str) -> bool:
             return False
 
     # Include known screen patterns
-    for indicator in screen_indicators:
-        if indicator in name_lower:
-            return True
-
-    # Default to including unknown devices as screens
-    # (they can be filtered by the user in the picker)
-    return False
+    return any(indicator in name_lower for indicator in screen_indicators)
 
 
 def _enumerate_linux_sources() -> list[CaptureSource]:

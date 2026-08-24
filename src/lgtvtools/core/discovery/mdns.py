@@ -15,7 +15,7 @@ import time
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from zeroconf import Zeroconf, ServiceInfo
+    from zeroconf import Zeroconf
 
 from lgtvtools.core.models import LGTVDevice
 

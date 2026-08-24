@@ -75,7 +75,7 @@ def open_url(url: str) -> CommandResult:
 
 def start_screen_mirror(device_ip: str = "", device_name: str = "") -> CommandResult:
     """Start screen mirroring using the platform-appropriate method.
-    
+
     - macOS: Opens System Settings > Displays (AirPlay) for the user to select the TV
     - Windows: Opens Connect panel (built-in Miracast)
     - Linux: Launches gnome-network-displays or miraclecast
@@ -140,7 +140,7 @@ def start_screen_mirror(device_ip: str = "", device_name: str = "") -> CommandRe
 
 def start_screen_cast() -> CommandResult:
     """Start screen casting using the platform-appropriate method.
-    
+
     - macOS: Opens System Settings > Displays (AirPlay)
     - Windows: Opens Connect/Cast panel
     - Linux: Launches gnome-network-displays or miraclecast

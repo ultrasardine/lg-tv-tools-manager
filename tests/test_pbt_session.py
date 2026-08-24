@@ -234,7 +234,7 @@ class TestProperty5SessionStateMachineTransitions:
 
         # Verify by replaying: rejected transitions should not change state
         sm2 = PureStateMachine()
-        for from_state, to_state, was_valid in sm.transition_history:
+        for _from_state, to_state, _was_valid in sm.transition_history:
             old = sm2.state
             result = sm2.transition(to_state)
             if not result:

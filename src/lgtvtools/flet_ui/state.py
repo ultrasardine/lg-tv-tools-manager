@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
 
 from lgtvtools.core.models import AppState, Capability, LGTVDevice
 from lgtvtools.core.runtime import Runtime

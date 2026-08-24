@@ -6,6 +6,7 @@ directory, allowing TVs to access local media via HTTP URLs.
 
 from __future__ import annotations
 
+import contextlib
 import functools
 import logging
 import os
@@ -213,7 +214,5 @@ class MediaShareServer:
 
     def __del__(self) -> None:
         """Ensure cleanup on deletion."""
-        try:
+        with contextlib.suppress(Exception):
             self.close()
-        except Exception:
-            pass

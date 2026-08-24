@@ -6,6 +6,7 @@ via the Simple Service Access Protocol over WebSocket.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import ssl
@@ -155,10 +156,8 @@ class WebOSClient:
         """Persist client key for this TV."""
         keys: dict[str, str] = {}
         if self._keys_file.exists():
-            try:
+            with contextlib.suppress(Exception):
                 keys = json.loads(self._keys_file.read_text())
-            except Exception:
-                pass
         if self._client_key:
             keys[self.ip] = self._client_key
             self._keys_file.parent.mkdir(parents=True, exist_ok=True)
@@ -266,11 +265,13 @@ class WebOSClient:
                 LOGGER.info("Registered with TV at %s", self.ip)
                 return WebOSResult(True, "Paired with TV", msg_payload)
 
-            if msg_type == "response" and msg.get("id") == "register_0":
-                # Check if it's a pairing prompt response
-                if msg_payload.get("pairingType") == "PROMPT":
-                    LOGGER.info("Pairing prompt displayed on TV at %s", self.ip)
-                    continue  # Wait for user to accept
+            if (
+                msg_type == "response"
+                and msg.get("id") == "register_0"
+                and msg_payload.get("pairingType") == "PROMPT"
+            ):
+                LOGGER.info("Pairing prompt displayed on TV at %s", self.ip)
+                continue  # Wait for user to accept
 
             if msg_type == "error":
                 error_msg = msg_payload.get("message", msg.get("error", "Unknown error"))
@@ -286,10 +287,8 @@ class WebOSClient:
     def disconnect(self) -> None:
         """Close the WebSocket connection."""
         if self._ws:
-            try:
+            with contextlib.suppress(Exception):
                 self._ws.close()
-            except Exception:
-                pass
             self._ws = None
 
     def _send_command(self, uri: str, payload: dict[str, Any] | None = None) -> WebOSResult:

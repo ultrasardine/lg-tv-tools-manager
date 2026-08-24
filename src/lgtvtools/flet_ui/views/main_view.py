@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import flet as ft
 
 from lgtvtools.core.discovery import discover_lg_tvs
 from lgtvtools.core.models import LGTVDevice
-from lgtvtools.core.webos import WebOSClient, connect_to_tv
+from lgtvtools.core.webos import connect_to_tv
 from lgtvtools.flet_ui.components.action_panel import ActionPanel
 from lgtvtools.flet_ui.components.device_list import DeviceList
 from lgtvtools.flet_ui.components.dialogs import show_error_dialog, show_url_input_dialog
@@ -224,9 +224,7 @@ class MainView:
                 result = await client.rewind()
             elif action == "forward":
                 result = await client.fast_forward()
-            elif action == "home":
-                result = await client.launch_app("com.webos.app.home")
-            elif action == "back":
+            elif action == "home" or action == "back":
                 result = await client.launch_app("com.webos.app.home")
 
             if result and not result.ok:
@@ -359,7 +357,7 @@ class MainView:
                     ft.Container(
                         bgcolor="#00000080",
                         expand=True,
-                        on_click=lambda e: self.hide_remote(),
+                        on_click=lambda _: self.hide_remote(),
                     ),
                     # Remote control centered
                     ft.Container(

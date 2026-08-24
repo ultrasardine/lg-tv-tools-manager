@@ -64,13 +64,13 @@ def get_upnp_services(device: LGTVDevice) -> list[UPnPService]:
     xml_cache: dict[str, ET.Element] = {}
     services: list[UPnPService] = []
     seen_services: set[tuple[str, str]] = set()
-    
+
     for location in device.locations:
         root = xml_cache.get(location) or _device_xml(location)
         if root is None:
             continue
         xml_cache[location] = root
-        
+
         base_url = location.rsplit("/", 1)[0] + "/"
         for service in root.findall(".//d:service", NS):
             service_type = service.findtext("d:serviceType", default="", namespaces=NS)

@@ -17,6 +17,8 @@ except ImportError:
     netifaces = None  # type: ignore
     _NETIFACES_AVAILABLE = False
 
+import contextlib
+
 from .models import LGTVDevice
 
 LOGGER = logging.getLogger(__name__)
@@ -99,7 +101,7 @@ def _get_local_ips() -> list[str]:
 
 def _is_lg_device_from_headers(headers: dict[str, str]) -> bool:
     """Quick pre-filter on SSDP response headers.
-    
+
     Returns True if there's any hint this might be an LG device,
     or if we can't tell (so we don't skip it prematurely).
     """
@@ -117,10 +119,7 @@ def _is_lg_device_from_headers(headers: dict[str, str]) -> bool:
     # If it's a MediaRenderer or DIAL device, let it through for XML check
     # (LG TVs often don't put "LG" in headers but do in XML)
     media_indicators = ("mediarenderer", "dial", "avtransport")
-    for indicator in media_indicators:
-        if indicator in combined:
-            return True
-    return False
+    return any(indicator in combined for indicator in media_indicators)
 
 
 def _is_lg_device_from_xml(root: ET.Element) -> bool:
@@ -136,7 +135,7 @@ def _is_lg_device_from_xml(root: ET.Element) -> bool:
 
 def discover_lg_tvs(timeout: float = 5.0) -> list[LGTVDevice]:
     """Discover LG TVs on the local network using SSDP multicast.
-    
+
     Sends multiple M-SEARCH packets across multiple search targets and
     joins the multicast group on all local interfaces for reliable reception.
     """
@@ -146,10 +145,8 @@ def discover_lg_tvs(timeout: float = 5.0) -> list[LGTVDevice]:
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     # Allow multiple sockets to use the same port (macOS needs SO_REUSEPORT)
-    try:
+    with contextlib.suppress(AttributeError, OSError):
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-    except (AttributeError, OSError):
-        pass
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 4)
     # Enable loopback so we receive our own multicast if needed
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 1)
@@ -207,11 +204,11 @@ def discover_lg_tvs(timeout: float = 5.0) -> list[LGTVDevice]:
             payload = data.decode("utf-8", "ignore")
             headers = _parse_headers(payload)
             location = headers.get("location", "")
-            
+
             # Skip responses without a location (can't fetch device description)
             if not location:
                 continue
-            
+
             # Skip duplicate locations early
             if location in seen_locations:
                 continue

@@ -7,6 +7,7 @@ for LG TVs based on manufacturer and device information.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 import socket
@@ -125,11 +126,7 @@ def _is_lg_device_from_headers(headers: dict[str, str]) -> bool:
 
     # If it's a MediaRenderer or DIAL device, let it through for XML check
     media_indicators = ("mediarenderer", "dial", "avtransport")
-    for indicator in media_indicators:
-        if indicator in combined:
-            return True
-
-    return False
+    return any(indicator in combined for indicator in media_indicators)
 
 
 def _is_lg_device_from_xml(root: ET.Element) -> bool:
@@ -162,10 +159,8 @@ def discover_lg_tvs(timeout: float = 5.0) -> list[LGTVDevice]:
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     # Allow multiple sockets to use the same port (macOS needs SO_REUSEPORT)
-    try:
+    with contextlib.suppress(AttributeError, OSError):
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-    except (AttributeError, OSError):
-        pass
 
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 4)
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 1)

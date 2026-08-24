@@ -6,12 +6,12 @@ import pytest
 
 from lgtvtools.core.models import WebOSResult
 from lgtvtools.core.webos.client import (
-    WebOSClient,
+    _REGISTRATION_PAYLOAD,
+    APP_BROWSER,
     SSAP_LAUNCH,
     SSAP_TOAST,
     SSAP_VOLUME_GET,
-    APP_BROWSER,
-    _REGISTRATION_PAYLOAD,
+    WebOSClient,
 )
 
 

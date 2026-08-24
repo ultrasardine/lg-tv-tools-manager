@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 import flet as ft
 
@@ -161,7 +161,7 @@ def DeviceList(
                     icon=ft.Icons.REFRESH,
                     icon_color=AppColors.TEXT_SECONDARY,
                     tooltip="Scan for TVs",
-                    on_click=lambda e: on_refresh() if on_refresh else None,
+                    on_click=lambda _: on_refresh() if on_refresh else None,
                     disabled=is_scanning,
                 ),
             ],

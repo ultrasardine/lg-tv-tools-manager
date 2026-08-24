@@ -10,12 +10,11 @@ from __future__ import annotations
 import asyncio
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import flet as ft
 
 from lgtvtools.core.discovery.upnp import cast_media_to_device
-from lgtvtools.core.models import LGTVDevice
 from lgtvtools.core.webos import connect_to_tv
 from lgtvtools.desktop.actions.launchers import (
     launch_external,

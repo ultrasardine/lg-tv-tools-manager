@@ -63,11 +63,11 @@ class TestProperty3ResolutionCappingPreservesAspectRatio:
         **Validates: Requirements 3.4**
         """
         input_width, input_height, max_width, max_height = data
-        
+
         output_width, _output_height = compute_output_resolution(
             input_width, input_height, max_width, max_height
         )
-        
+
         assert output_width <= max_width, (
             f"Output width {output_width} exceeds max_width {max_width}. "
             f"Input: {input_width}x{input_height}, max: {max_width}x{max_height}"
@@ -84,11 +84,11 @@ class TestProperty3ResolutionCappingPreservesAspectRatio:
         **Validates: Requirements 3.4**
         """
         input_width, input_height, max_width, max_height = data
-        
+
         _output_width, output_height = compute_output_resolution(
             input_width, input_height, max_width, max_height
         )
-        
+
         assert output_height <= max_height, (
             f"Output height {output_height} exceeds max_height {max_height}. "
             f"Input: {input_width}x{input_height}, max: {max_width}x{max_height}"
@@ -105,11 +105,11 @@ class TestProperty3ResolutionCappingPreservesAspectRatio:
         **Validates: Requirements 3.4**
         """
         input_width, input_height, max_width, max_height = data
-        
+
         output_width, output_height = compute_output_resolution(
             input_width, input_height, max_width, max_height
         )
-        
+
         assert output_width % 2 == 0, (
             f"Output width {output_width} is not even. "
             f"Input: {input_width}x{input_height}, max: {max_width}x{max_height}"
@@ -134,34 +134,34 @@ class TestProperty3ResolutionCappingPreservesAspectRatio:
         requirement for codec compatibility.
         """
         input_width, input_height, max_width, max_height = data
-        
+
         output_width, output_height = compute_output_resolution(
             input_width, input_height, max_width, max_height
         )
-        
+
         # Skip check if output dimensions are zero (degenerate case)
         if output_width == 0 or output_height == 0:
             return
-        
+
         # Calculate aspect ratios
         input_aspect = input_width / input_height
         output_aspect = output_width / output_height
-        
+
         # Calculate expected output height for the output width (and vice versa)
         # to determine the tolerance in pixels
         expected_height_from_width = output_width / input_aspect
         expected_width_from_height = output_height * input_aspect
-        
+
         # The tolerance allows for 1 pixel deviation in either dimension
         # due to the requirement to have even dimensions
         height_diff = abs(output_height - expected_height_from_width)
         width_diff = abs(output_width - expected_width_from_height)
-        
+
         # We allow tolerance of up to 2 pixels due to:
         # 1. Rounding to even dimensions (up to 1 pixel)
         # 2. Additional rounding during calculation (up to 1 pixel)
         tolerance = 2.0
-        
+
         assert height_diff <= tolerance or width_diff <= tolerance, (
             f"Aspect ratio not preserved within {tolerance}px tolerance. "
             f"Input: {input_width}x{input_height} (aspect {input_aspect:.4f}), "
@@ -186,21 +186,21 @@ class TestProperty3ResolutionCappingPreservesAspectRatio:
         == W/H (within rounding tolerance of 1 pixel).
         """
         input_width, input_height, max_width, max_height = data
-        
+
         output_width, output_height = compute_output_resolution(
             input_width, input_height, max_width, max_height
         )
-        
+
         # 1. Output width <= max_width
         assert output_width <= max_width, (
             f"Property 3 violation: Output width {output_width} > max_width {max_width}"
         )
-        
+
         # 2. Output height <= max_height
         assert output_height <= max_height, (
             f"Property 3 violation: Output height {output_height} > max_height {max_height}"
         )
-        
+
         # 3. Output dimensions are even (codec compatibility)
         assert output_width % 2 == 0, (
             f"Property 3 violation: Output width {output_width} is not even"
@@ -208,17 +208,17 @@ class TestProperty3ResolutionCappingPreservesAspectRatio:
         assert output_height % 2 == 0, (
             f"Property 3 violation: Output height {output_height} is not even"
         )
-        
+
         # 4. Aspect ratio preserved within tolerance
         if output_width > 0 and output_height > 0:
             input_aspect = input_width / input_height
-            
+
             expected_height = output_width / input_aspect
             expected_width = output_height * input_aspect
-            
+
             height_diff = abs(output_height - expected_height)
             width_diff = abs(output_width - expected_width)
-            
+
             tolerance = 2.0
             assert height_diff <= tolerance or width_diff <= tolerance, (
                 f"Property 3 violation: Aspect ratio not preserved. "
@@ -240,7 +240,7 @@ class TestResolutionCappingEdgeCases:
             max_width=1920,
             max_height=1080,
         )
-        
+
         # Should preserve input dimensions (already even)
         assert output_width == 800
         assert output_height == 600
@@ -253,7 +253,7 @@ class TestResolutionCappingEdgeCases:
             max_width=1920,
             max_height=1080,
         )
-        
+
         assert output_width == 1920
         assert output_height == 1080
 
@@ -265,13 +265,13 @@ class TestResolutionCappingEdgeCases:
             max_width=1920,
             max_height=1080,
         )
-        
+
         # 16:9 aspect ratio should be preserved
         assert output_width <= 1920
         assert output_height <= 1080
         assert output_width % 2 == 0
         assert output_height % 2 == 0
-        
+
         # Check aspect ratio (16:9)
         input_aspect = 7680 / 4320  # 1.777...
         output_aspect = output_width / output_height
@@ -286,10 +286,10 @@ class TestResolutionCappingEdgeCases:
             max_width=1920,
             max_height=1080,
         )
-        
+
         assert output_width <= 1920
         assert output_height <= 1080
-        
+
         # Verify aspect ratio preserved
         input_aspect = 3440 / 1440
         output_aspect = output_width / output_height
@@ -305,10 +305,10 @@ class TestResolutionCappingEdgeCases:
             max_width=1920,
             max_height=1080,
         )
-        
+
         assert output_width <= 1920
         assert output_height <= 1080
-        
+
         # Height is the limiting factor for portrait
         # Expected: height = 1080, width = 1080 * (1080/1920) = 607.5 -> 608
         assert output_height <= 1080
@@ -323,7 +323,7 @@ class TestResolutionCappingEdgeCases:
             max_width=1920,
             max_height=1080,
         )
-        
+
         assert output_width % 2 == 0
         assert output_height % 2 == 0
 
@@ -335,7 +335,7 @@ class TestResolutionCappingEdgeCases:
             max_width=1920,
             max_height=1080,
         )
-        
+
         # Width should be capped, height scaled proportionally
         assert output_width <= 1920
         assert output_height <= 1080
@@ -348,7 +348,7 @@ class TestResolutionCappingEdgeCases:
             max_width=1920,
             max_height=1080,
         )
-        
+
         # Height should be capped, width scaled proportionally
         assert output_height <= 1080
         assert output_width <= 1920
@@ -363,7 +363,7 @@ class TestResolutionCappingEdgeCases:
         )
         assert output_width == 0
         assert output_height == 0
-        
+
         output_width, output_height = compute_output_resolution(
             input_width=100,
             input_height=0,
@@ -381,7 +381,7 @@ class TestResolutionCappingEdgeCases:
             max_width=1920,
             max_height=1080,
         )
-        
+
         # Should preserve small dimensions
         assert output_width == 2
         assert output_height == 2
@@ -396,7 +396,7 @@ class TestResolutionCappingEdgeCases:
             max_width=1920,
             max_height=1080,
         )
-        
+
         # 1 // 2 * 2 = 0
         assert output_width == 0
         assert output_height == 0
@@ -407,13 +407,13 @@ class TestResolutionCappingEdgeCases:
 # =============================================================================
 
 
-from lgtvtools.mirror.capture import (
+from lgtvtools.mirror.capture import (  # noqa: E402
     HARDWARE_ENCODERS,
     SOFTWARE_ENCODER,
     select_encoder,
 )
-from lgtvtools.mirror.models import EncoderInfo
-from lgtvtools.system.platform import Platform
+from lgtvtools.mirror.models import EncoderInfo  # noqa: E402
+from lgtvtools.system.platform import Platform  # noqa: E402
 
 # -----------------------------------------------------------------------------
 # Strategies for generating encoder selection scenarios
@@ -744,12 +744,12 @@ class TestProperty6HardwareEncoderSelection:
 # for any valid CaptureConfig input.
 # -----------------------------------------------------------------------------
 
-from pathlib import Path
-from unittest import mock
+from pathlib import Path  # noqa: E402
+from unittest import mock  # noqa: E402
 
-from lgtvtools.mirror.capture import CapturePipeline
-from lgtvtools.mirror.models import CaptureConfig, CaptureSource
-from lgtvtools.system.platform import Platform
+from lgtvtools.mirror.capture import CapturePipeline  # noqa: E402
+from lgtvtools.mirror.models import CaptureConfig, CaptureSource  # noqa: E402
+from lgtvtools.system.platform import Platform  # noqa: E402
 
 # -----------------------------------------------------------------------------
 # Strategies for generating random CaptureConfig values

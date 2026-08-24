@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 import flet as ft
 
@@ -54,7 +54,7 @@ def ActionButton(
                 tight=True,
             ),
             bgcolor=bgcolor,
-            on_click=lambda e: on_click() if on_click else None,
+            on_click=lambda _: on_click() if on_click else None,
             disabled=disabled,
             tooltip=tooltip,
             style=ft.ButtonStyle(

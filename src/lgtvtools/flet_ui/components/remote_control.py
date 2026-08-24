@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 import flet as ft
 
@@ -41,7 +41,7 @@ def RemoteButton(
                 icon=icon,
                 icon_size=icon_size,
                 icon_color=AppColors.TEXT_PRIMARY,
-                on_click=lambda e: on_click() if on_click else None,
+                on_click=lambda _: on_click() if on_click else None,
                 style=ft.ButtonStyle(
                     shape=ft.CircleBorder() if circular else ft.RoundedRectangleBorder(radius=8),
                     bgcolor=AppColors.SURFACE_VARIANT,
@@ -55,7 +55,7 @@ def RemoteButton(
         return ft.Container(
             content=ft.ElevatedButton(
                 text=label or "",
-                on_click=lambda e: on_click() if on_click else None,
+                on_click=lambda _: on_click() if on_click else None,
                 style=ft.ButtonStyle(
                     shape=ft.CircleBorder() if circular else ft.RoundedRectangleBorder(radius=8),
                     bgcolor=AppColors.SURFACE_VARIANT,
@@ -124,7 +124,7 @@ def RemoteControl(
                 ft.IconButton(
                     icon=ft.Icons.CLOSE,
                     icon_color=AppColors.TEXT_SECONDARY,
-                    on_click=lambda e: on_close() if on_close else None,
+                    on_click=lambda _: on_close() if on_close else None,
                     tooltip="Close remote",
                 ),
             ],

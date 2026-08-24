@@ -12,7 +12,6 @@ import sys
 from dataclasses import dataclass, field
 from enum import Enum
 from functools import cached_property
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -225,9 +224,7 @@ class Runtime:
         """
         if self.is_desktop:
             return self.has_zeroconf
-        if self.is_mobile:
-            return True  # Native mDNS on iOS/Android
-        return False
+        return self.is_mobile  # Native mDNS on iOS/Android
 
     @property
     def can_discover_ssdp(self) -> bool:

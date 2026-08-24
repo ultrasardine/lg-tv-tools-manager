@@ -10,8 +10,8 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from lgtvtools.mirror.content_picker import ContentPicker
-from lgtvtools.mirror.models import CaptureSource
+from lgtvtools.mirror.content_picker import ContentPicker  # noqa: E402
+from lgtvtools.mirror.models import CaptureSource  # noqa: E402
 
 
 @pytest.fixture
@@ -131,7 +131,7 @@ class TestContentPicker:
         assert selected.name == "Display 2"
 
     def test_format_source_label_screen_with_resolution(
-        self, qtbot, sample_sources: list[CaptureSource]
+        self, qtbot, sample_sources: list[CaptureSource]  # noqa: ARG002
     ) -> None:
         """_format_source_label should correctly format screen with resolution."""
         picker = ContentPicker([])
@@ -145,7 +145,7 @@ class TestContentPicker:
         assert label == "Main Display (screen) - 3840x2160"
 
     def test_format_source_label_window_without_resolution(
-        self, qtbot, sample_sources: list[CaptureSource]
+        self, qtbot, sample_sources: list[CaptureSource]  # noqa: ARG002
     ) -> None:
         """_format_source_label should handle window without resolution."""
         picker = ContentPicker([])

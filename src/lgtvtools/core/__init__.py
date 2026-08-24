@@ -22,6 +22,7 @@ __all__ = [
 from lgtvtools.core.models import LGTVDevice, WebOSResult
 from lgtvtools.core.runtime import Runtime
 
+
 # Lazy import for discovery to avoid import errors on mobile
 def discover_lg_tvs(timeout: float = 5.0) -> list[LGTVDevice]:
     """Discover LG TVs using available protocols."""

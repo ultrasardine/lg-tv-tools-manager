@@ -116,7 +116,7 @@ class ContentPicker(QDialog):
         if self._ok_button:
             self._ok_button.setEnabled(has_selection)
 
-    def _on_double_click(self, item: QListWidgetItem) -> None:
+    def _on_double_click(self, item: QListWidgetItem) -> None:  # noqa: ARG002
         """Handle double-click on a list item to accept immediately."""
         self._on_accepted()
 
