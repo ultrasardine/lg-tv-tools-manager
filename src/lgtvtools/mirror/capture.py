@@ -21,7 +21,6 @@ Requirements covered:
 from __future__ import annotations
 
 import logging
-import shutil
 import subprocess
 from pathlib import Path
 
@@ -136,7 +135,9 @@ class CapturePipeline:
         if self.is_running:
             raise RuntimeError("Capture pipeline is already running")
 
-        ffmpeg_path = shutil.which("ffmpeg")
+        from lgtvtools.system.bundled import which as bundled_which
+
+        ffmpeg_path = bundled_which("ffmpeg")
         if ffmpeg_path is None:
             raise FileNotFoundError(
                 "ffmpeg is not installed. Screen mirroring requires ffmpeg."

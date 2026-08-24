@@ -67,6 +67,9 @@ def _mobile_main(page: ft.Page) -> None:
 
 def run_mobile_app() -> None:
     """Run the mobile Flet application."""
+    from lgtvtools.flet_ui.app import _cleanup_flet_client_cache
+
+    _cleanup_flet_client_cache()
     ft.app(target=_mobile_main)
 
 

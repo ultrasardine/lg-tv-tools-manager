@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -338,7 +337,9 @@ class MainWindow(QMainWindow):
             return
 
         # Check ffmpeg availability (Requirement 7.3)
-        if not shutil.which("ffmpeg"):
+        from lgtvtools.system.bundled import which as bundled_which
+
+        if not bundled_which("ffmpeg"):
             QMessageBox.warning(
                 self,
                 "LG TV Tools",

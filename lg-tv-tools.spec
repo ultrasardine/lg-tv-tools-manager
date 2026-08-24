@@ -43,6 +43,11 @@ if RESOURCES_DIR.exists():
     else:
         datas.append((str(RESOURCES_DIR), 'lgtvtools/resources'))
 
+# Include vendored binaries (ffmpeg, etc.) if present
+VENDOR_BIN_DIR = SPEC_DIR / 'vendor' / 'bin'
+if VENDOR_BIN_DIR.exists():
+    datas.append((str(VENDOR_BIN_DIR), 'vendor/bin'))
+
 # Hidden imports that PyInstaller might miss
 hiddenimports = [
     # Core modules

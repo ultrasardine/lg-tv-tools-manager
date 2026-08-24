@@ -21,7 +21,6 @@ Requirements covered:
 from __future__ import annotations
 
 import logging
-import shutil
 import tempfile
 import threading
 import time
@@ -404,7 +403,9 @@ class MirrorSession:
             MirrorResult indicating if prerequisites are met.
         """
         # Check ffmpeg availability
-        ffmpeg_path = shutil.which("ffmpeg")
+        from lgtvtools.system.bundled import which as bundled_which
+
+        ffmpeg_path = bundled_which("ffmpeg")
         if ffmpeg_path is None:
             LOGGER.error("ffmpeg not found in PATH")
             return MirrorResult(

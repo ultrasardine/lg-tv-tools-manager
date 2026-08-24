@@ -34,7 +34,9 @@ def enumerate_sources(platform: Platform) -> list[CaptureSource]:
         - Platform is unknown/unsupported
         - Enumeration fails for any reason
     """
-    if not shutil.which("ffmpeg"):
+    from lgtvtools.system.bundled import which as bundled_which
+
+    if not bundled_which("ffmpeg"):
         LOGGER.warning("ffmpeg not found in PATH; cannot enumerate capture sources")
         return []
 

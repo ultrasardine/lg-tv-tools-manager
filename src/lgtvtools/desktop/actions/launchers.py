@@ -26,8 +26,10 @@ class LaunchResult:
 
 
 def which(command: str) -> str | None:
-    """Check if a command is available in PATH."""
-    return shutil.which(command)
+    """Check if a command is available (bundled or PATH)."""
+    from lgtvtools.system.bundled import which as bundled_which
+
+    return bundled_which(command)
 
 
 def launch_external(command: str, args: list[str] | None = None) -> LaunchResult:
@@ -40,7 +42,9 @@ def launch_external(command: str, args: list[str] | None = None) -> LaunchResult
     Returns:
         LaunchResult indicating success or failure.
     """
-    path = shutil.which(command)
+    from lgtvtools.system.bundled import which as bundled_which
+
+    path = bundled_which(command)
     if not path:
         return LaunchResult(False, f"{command} is not installed")
 

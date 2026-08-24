@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import shutil
 import subprocess
 from dataclasses import dataclass
 
@@ -69,6 +68,8 @@ _DEPS: dict[str, dict[Platform, str | None]] = {
 
 def detect_capabilities() -> list[Capability]:
     """Detect installed capabilities relevant to the current platform."""
+    from lgtvtools.system.bundled import which as bundled_which
+
     current = detect_platform()
     result: list[Capability] = []
 
@@ -79,9 +80,9 @@ def detect_capabilities() -> list[Capability]:
             continue
 
         if name == "miraclecast":
-            path = shutil.which("miraclecast") or shutil.which("miracle-wifid")
+            path = bundled_which("miraclecast") or bundled_which("miracle-wifid")
         else:
-            path = shutil.which(name)
+            path = bundled_which(name)
 
         result.append(Capability(name=name, installed=bool(path), path=path, hint=hint))
 
@@ -129,7 +130,9 @@ def install_command_summary() -> str:
 
 def run_if_available(command: str, args: list[str] | None = None) -> subprocess.Popen | None:
     """Run a command if it exists in PATH, otherwise return None."""
-    path = shutil.which(command)
+    from lgtvtools.system.bundled import which as bundled_which
+
+    path = bundled_which(command)
     if not path:
         return None
     return subprocess.Popen([path, *(args or [])])

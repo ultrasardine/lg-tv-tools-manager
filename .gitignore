@@ -19,6 +19,9 @@ coverage.xml
 *.sha256
 .DS_Store
 
+# Vendored binaries (downloaded during build)
+vendor/
+
 # others
 .kiro/
 .hypothesis/

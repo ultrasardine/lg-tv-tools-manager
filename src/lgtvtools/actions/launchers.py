@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import logging
-import shutil
 import subprocess
 
 LOGGER = logging.getLogger(__name__)
 
 
 def open_app(command: str, args: list[str] | None = None) -> tuple[bool, str]:
-    path = shutil.which(command)
+    from lgtvtools.system.bundled import which as bundled_which
+
+    path = bundled_which(command)
     if not path:
         return False, f"{command} is not installed"
     try:

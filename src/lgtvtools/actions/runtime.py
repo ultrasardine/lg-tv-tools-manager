@@ -19,11 +19,15 @@ class CommandResult:
 
 
 def which(command: str) -> str | None:
-    return shutil.which(command)
+    from lgtvtools.system.bundled import which as bundled_which
+
+    return bundled_which(command)
 
 
 def launch(command: str, args: list[str] | None = None) -> CommandResult:
-    path = shutil.which(command)
+    from lgtvtools.system.bundled import which as bundled_which
+
+    path = bundled_which(command)
     if not path:
         return CommandResult(False, f"{command} is not installed")
     try:

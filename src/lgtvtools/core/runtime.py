@@ -55,13 +55,15 @@ class Runtime:
         Returns:
             Runtime instance with detected environment and capabilities.
         """
+        from lgtvtools.system.bundled import which as bundled_which
+
         env = cls._detect_environment()
         runtime = cls(environment=env)
 
         # Pre-detect common capabilities
         if runtime.is_desktop:
-            runtime._capabilities["ffmpeg"] = shutil.which("ffmpeg") is not None
-            runtime._capabilities["vlc"] = shutil.which("vlc") is not None
+            runtime._capabilities["ffmpeg"] = bundled_which("ffmpeg") is not None
+            runtime._capabilities["vlc"] = bundled_which("vlc") is not None
             runtime._capabilities["xdg_open"] = shutil.which("xdg-open") is not None
 
             # Check for optional Python packages
@@ -288,8 +290,10 @@ class Runtime:
 
         # Try to detect on-demand
         if name.startswith("cmd:"):
+            from lgtvtools.system.bundled import which as bundled_which
+
             cmd = name[4:]
-            result = shutil.which(cmd) is not None
+            result = bundled_which(cmd) is not None
             self._capabilities[name] = result
             return result
 
@@ -341,7 +345,9 @@ class Runtime:
 
             # Platform-specific capabilities
             if self.is_linux:
-                gnd = shutil.which("gnome-network-displays") is not None
+                from lgtvtools.system.bundled import which as bundled_which
+
+                gnd = bundled_which("gnome-network-displays") is not None
                 capabilities.append(Capability(
                     name="gnome-network-displays",
                     installed=gnd,

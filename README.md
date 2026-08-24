@@ -125,12 +125,17 @@ uv run lg-tv-tools-qt
 The application checks for platform-relevant tools at runtime:
 
 - `ffmpeg` (all platforms - required for in-app screen mirroring)
-- `VLC` (all platforms)
-- `gnome-network-displays` (Linux only)
-- `rygel` (Linux only)
-- `pulseaudio` (Linux only)
-- `pipewire` (Linux only)
-- `miraclecast` (Linux only)
+  - **Windows**: bundled with the release build, no install needed
+  - **macOS**: `brew install ffmpeg`
+  - **Linux**: `sudo apt install ffmpeg` or `sudo dnf install ffmpeg`
+- `VLC` (all platforms - optional, for media playback)
+  - **Windows**: `winget install VideoLAN.VLC`
+  - **macOS**: `brew install --cask vlc`
+  - **Linux**: `sudo apt install vlc` or `sudo dnf install vlc`
+- `gnome-network-displays` (Linux only - Miracast streaming)
+- `rygel` (Linux only - UPnP/DLNA media server)
+- `pulseaudio` / `pipewire` (Linux only - audio subsystem)
+- `miraclecast` (Linux only - Miracast alternative)
 
 If any applicable dependency is missing, the UI shows a platform-appropriate installation hint.
 
