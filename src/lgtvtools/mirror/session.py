@@ -40,7 +40,7 @@ from lgtvtools.webos.client import WebOSClient, connect_to_tv
 LOGGER = logging.getLogger(__name__)
 
 # Timeout for waiting for the first HLS segment (seconds)
-FIRST_SEGMENT_TIMEOUT = 10.0
+FIRST_SEGMENT_TIMEOUT = 20.0
 
 # Interval for checking segment availability (seconds)
 SEGMENT_CHECK_INTERVAL = 0.2
@@ -223,11 +223,31 @@ class MirrorSession:
                 stderr = ""
                 if self._pipeline:
                     stderr = self._pipeline.get_stderr()
+                    # Log full stderr for debugging
+                    if stderr:
+                        LOGGER.error("ffmpeg stderr output:\n%s", stderr.strip())
                 self._handle_startup_error(f"Encoding failed to start: {stderr}")
+
+                # Build user-facing message with hint
+                user_msg = (
+                    "Encoding failed to start. First segment not produced "
+                    f"within {FIRST_SEGMENT_TIMEOUT:.0f} seconds."
+                )
+                if stderr and "Configuration of video device failed" in stderr:
+                    user_msg += (
+                        "\n\nHint: macOS screen recording permission may be required. "
+                        "Go to System Settings > Privacy & Security > Screen Recording "
+                        "and enable access for this application."
+                    )
+                elif stderr:
+                    # Show last meaningful line from ffmpeg
+                    lines = [ln for ln in stderr.strip().splitlines() if ln.strip()]
+                    if lines:
+                        user_msg += f"\n\nffmpeg: {lines[-1].strip()}"
+
                 return MirrorResult(
                     ok=False,
-                    message="Encoding failed to start. First segment not produced "
-                    f"within {FIRST_SEGMENT_TIMEOUT:.0f} seconds.",
+                    message=user_msg,
                     state=MirrorState.ERROR,
                 )
 

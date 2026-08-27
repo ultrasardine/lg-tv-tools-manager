@@ -20,6 +20,7 @@ Requirements covered:
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import subprocess
 from pathlib import Path
@@ -91,6 +92,8 @@ class CapturePipeline:
 
         self._process: subprocess.Popen[bytes] | None = None
         self._encoder: EncoderInfo | None = None
+        self._stderr_file: Path | None = None
+        self._stderr_fh: object | None = None
 
     @property
     def encoder(self) -> EncoderInfo:
@@ -151,10 +154,16 @@ class CapturePipeline:
         LOGGER.debug("Encoder: %s (hardware=%s)", self.encoder.name, self.encoder.is_hardware)
 
         try:
+            # Write stderr to a file to prevent pipe buffer blocking ffmpeg.
+            # ffmpeg writes continuous progress info to stderr which fills the
+            # pipe buffer (64KB) and blocks the process if nothing reads it.
+            self._stderr_file = self.output_dir / "ffmpeg_stderr.log"
+            self._stderr_fh = self._stderr_file.open("w")
+
             self._process = subprocess.Popen(
                 command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stdout=subprocess.DEVNULL,
+                stderr=self._stderr_fh,
                 stdin=subprocess.DEVNULL,
             )
             LOGGER.info(
@@ -213,6 +222,12 @@ class CapturePipeline:
 
         self._process = None
 
+        # Close stderr file handle
+        if self._stderr_fh is not None:
+            with contextlib.suppress(OSError, ValueError):
+                self._stderr_fh.close()
+            self._stderr_fh = None
+
     def get_stderr(self) -> str:
         """Get the stderr output from the ffmpeg process.
 
@@ -221,12 +236,16 @@ class CapturePipeline:
         Returns:
             The stderr output, or empty string if no process or stderr unavailable.
         """
-        if self._process is None or self._process.stderr is None:
+        # Flush the file handle so we can read what's been written
+        if self._stderr_fh is not None:
+            with contextlib.suppress(OSError, ValueError):
+                self._stderr_fh.flush()
+
+        if self._stderr_file is None or not self._stderr_file.exists():
             return ""
         try:
-            # Non-blocking read of available stderr
-            return self._process.stderr.read().decode("utf-8", errors="replace")
-        except (OSError, ValueError):
+            return self._stderr_file.read_text(errors="replace")
+        except OSError:
             return ""
 
     def _build_command(self) -> list[str]:
@@ -235,7 +254,7 @@ class CapturePipeline:
         Returns:
             A list of command-line arguments for ffmpeg.
         """
-        cmd = ["ffmpeg", "-hide_banner", "-y"]
+        cmd = ["ffmpeg", "-hide_banner", "-nostats", "-y"]
 
         # Input configuration (platform-specific)
         cmd.extend(self._build_input_args())
@@ -325,8 +344,9 @@ class CapturePipeline:
         args.extend(["-g", str(gop_size)])
         args.extend(["-keyint_min", str(gop_size)])
 
-        # Pixel format for compatibility
-        args.extend(["-pix_fmt", "yuv420p"])
+        # Pixel format for compatibility (skip for hardware encoders that handle it natively)
+        if not encoder.is_hardware:
+            args.extend(["-pix_fmt", "yuv420p"])
 
         return args
 
@@ -351,6 +371,10 @@ class CapturePipeline:
             f":force_original_aspect_ratio=decrease,"
             f"scale=trunc(iw/2)*2:trunc(ih/2)*2"
         )
+
+        # For hardware encoders, add format conversion to nv12 (expected input format)
+        if self.encoder.is_hardware:
+            scale_filter += ",format=nv12"
 
         return ["-vf", scale_filter]
 

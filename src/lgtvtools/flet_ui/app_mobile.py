@@ -54,15 +54,27 @@ def _mobile_main(page: ft.Page) -> None:
     # Create main view
     main_view = MainView(page, state_manager)
 
+    # Rebuild UI on state change
+    def on_state_change() -> None:
+        page.controls.clear()
+        page.add(main_view.build())
+        page.update()
+
+    state_manager.on_state_change = on_state_change
+
     # Setup cleanup on close
     async def on_close(e: ft.ControlEvent) -> None:
         LOGGER.info("Application closing, cleaning up...")
+        main_view.cleanup()
         await state_manager.cleanup()
 
     page.on_close = on_close
 
     # Add main view to page
-    page.add(main_view)
+    page.add(main_view.build())
+
+    # Start initial network scan
+    page.run_task(main_view.scan_network)
 
 
 def run_mobile_app() -> None:

@@ -68,6 +68,10 @@ run: ##@Run Start the LG TV Tools Flet desktop application
 run-mobile: ##@Run Start the LG TV Tools mobile/remote application
 	$(UV) run lg-tv-remote
 
+.PHONY: run-ios
+run-ios: ##@Run Debug the app on a connected iOS device via Flet
+	FLET_PYTHON_BUILD_MANIFEST=/tmp/manifest.json $(UV) run flet debug --device-id ios
+
 .PHONY: run-qt
 run-qt: ##@Run Start the legacy PyQt6 desktop application (requires qt extras)
 	$(UV) run lg-tv-tools-qt
@@ -142,6 +146,10 @@ build-macos: ##@Build Create a macOS .app bundle via PyInstaller
 .PHONY: build-windows
 build-windows: ##@Build Create a Windows .exe installer via PyInstaller
 	bash $(SCRIPTS_DIR)/build_windows.sh
+
+.PHONY: build-ios
+build-ios: ##@Build Build iOS IPA (requires Apple Developer account and team ID)
+	FLET_PYTHON_BUILD_MANIFEST=/tmp/manifest.json $(UV) run flet build ipa
 
 .PHONY: build-all
 build-all: build build-deb build-rpm build-macos build-windows ##@Build Build all platform packages from current host

@@ -129,7 +129,13 @@ class MainView:
             self.state_manager.set_connecting(False)
 
     async def cast_url(self) -> None:
-        """Cast a URL to the TV."""
+        """Cast a URL to the TV.
+
+        Smart URL handling:
+        - YouTube links -> native YouTube app
+        - Direct media URLs (.mp4, .m3u8, etc.) -> native media player
+        - Other URLs -> TV browser as fallback
+        """
         device = self.state_manager.state.selected_device
         if not device:
             return
@@ -148,7 +154,7 @@ class MainView:
                         return
                     self.state_manager.set_webos_client(client)
 
-                result = await client.launch_browser(url)
+                result = await self._cast_url_smart(client, url)
                 if result.ok:
                     self.state_manager.log(f"Casted: {url}")
                     self.state_manager.set_connection_status("Casting")
@@ -166,6 +172,89 @@ class MainView:
             hint="Enter URL (e.g., youtube.com/watch?v=...)",
             on_submit=on_submit,
         )
+
+    async def _cast_url_smart(self, client: object, url: str) -> object:
+        """Route URL to the best playback method on the TV.
+
+        Priority:
+        1. YouTube URLs -> native YouTube app (best experience)
+        2. Direct media URLs -> native media viewer (ssap://media.viewer/open)
+        3. Anything else -> open_media_url which auto-detects or falls back to browser
+
+        Args:
+            client: Connected WebOSClient instance.
+            url: The URL to cast.
+
+        Returns:
+            WebOSResult indicating success or failure.
+        """
+        from urllib.parse import urlparse
+
+        parsed = urlparse(url)
+        host = parsed.hostname or ""
+
+        # YouTube: launch native app with content ID for proper playback
+        if host in ("youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"):
+            video_id = self._extract_youtube_id(url, parsed)
+            if video_id:
+                LOGGER.info("Launching native YouTube app with video: %s", video_id)
+                result = await client.launch_app(
+                    "youtube.leanback.v4",
+                    {"contentTarget": f"https://www.youtube.com/watch?v={video_id}"},
+                )
+                if result.ok:
+                    return result
+                LOGGER.debug("Native YouTube launch failed, trying media URL")
+
+        # For all other URLs, use open_media_url which handles media detection
+        # and browser fallback internally
+        return await client.open_media_url(url)
+
+    @staticmethod
+    def _extract_youtube_id(url: str, parsed: object | None = None) -> str | None:
+        """Extract video ID from various YouTube URL formats.
+
+        Supports:
+        - youtube.com/watch?v=VIDEO_ID
+        - youtu.be/VIDEO_ID
+        - youtube.com/embed/VIDEO_ID
+        - youtube.com/shorts/VIDEO_ID
+
+        Args:
+            url: The YouTube URL.
+            parsed: Pre-parsed URL (urlparse result), or None.
+
+        Returns:
+            The video ID string, or None if not found.
+        """
+        from urllib.parse import parse_qs, urlparse
+
+        if parsed is None:
+            parsed = urlparse(url)
+
+        host = parsed.hostname or ""
+
+        # youtu.be/VIDEO_ID
+        if host == "youtu.be":
+            video_id = parsed.path.lstrip("/")
+            if video_id:
+                return video_id.split("/")[0]
+
+        # youtube.com/watch?v=VIDEO_ID
+        if parsed.path == "/watch":
+            qs = parse_qs(parsed.query)
+            ids = qs.get("v")
+            if ids:
+                return ids[0]
+
+        # youtube.com/embed/VIDEO_ID or /shorts/VIDEO_ID
+        for prefix in ("/embed/", "/shorts/", "/v/"):
+            if parsed.path.startswith(prefix):
+                video_id = parsed.path[len(prefix):].split("/")[0].split("?")[0]
+                if video_id:
+                    return video_id
+
+        return None
 
     async def start_mirror(self) -> None:
         """Start or stop screen mirroring via the built-in HLS pipeline."""
@@ -219,6 +308,12 @@ class MainView:
     def hide_remote(self) -> None:
         """Hide the remote control overlay."""
         self.state_manager.set_show_remote(False)
+
+    def _remote(self, action: str):
+        """Return a coroutine function for a remote action (for page.run_task)."""
+        async def _do() -> None:
+            await self.remote_action(action)
+        return _do
 
     async def remote_action(self, action: str) -> None:
         """Execute a remote control action."""
@@ -295,7 +390,7 @@ class MainView:
             on_cast_url=lambda: self.page.run_task(self.cast_url),
             on_show_remote=self.show_remote,
             # Desktop-only callbacks
-            on_mirror=lambda: self.page.run_task(self.start_mirror) if self._desktop_actions else None,
+            on_mirror=lambda: self.page.run_task(self.start_mirror),
             on_send_video=lambda: self.page.run_task(self._desktop_actions.send_video) if self._desktop_actions else None,
             on_send_image=lambda: self.page.run_task(self._desktop_actions.send_image) if self._desktop_actions else None,
             on_send_music=lambda: self.page.run_task(self._desktop_actions.send_music) if self._desktop_actions else None,
@@ -400,19 +495,19 @@ class MainView:
                     # Remote control centered
                     ft.Container(
                         content=RemoteControl(
-                            on_power=lambda: self.page.run_task(lambda: self.remote_action("power")),
-                            on_volume_up=lambda: self.page.run_task(lambda: self.remote_action("volume_up")),
-                            on_volume_down=lambda: self.page.run_task(lambda: self.remote_action("volume_down")),
-                            on_mute=lambda: self.page.run_task(lambda: self.remote_action("mute")),
-                            on_channel_up=lambda: self.page.run_task(lambda: self.remote_action("channel_up")),
-                            on_channel_down=lambda: self.page.run_task(lambda: self.remote_action("channel_down")),
-                            on_play=lambda: self.page.run_task(lambda: self.remote_action("play")),
-                            on_pause=lambda: self.page.run_task(lambda: self.remote_action("pause")),
-                            on_stop=lambda: self.page.run_task(lambda: self.remote_action("stop")),
-                            on_rewind=lambda: self.page.run_task(lambda: self.remote_action("rewind")),
-                            on_forward=lambda: self.page.run_task(lambda: self.remote_action("forward")),
-                            on_home=lambda: self.page.run_task(lambda: self.remote_action("home")),
-                            on_back=lambda: self.page.run_task(lambda: self.remote_action("back")),
+                            on_power=lambda: self.page.run_task(self._remote("power")),
+                            on_volume_up=lambda: self.page.run_task(self._remote("volume_up")),
+                            on_volume_down=lambda: self.page.run_task(self._remote("volume_down")),
+                            on_mute=lambda: self.page.run_task(self._remote("mute")),
+                            on_channel_up=lambda: self.page.run_task(self._remote("channel_up")),
+                            on_channel_down=lambda: self.page.run_task(self._remote("channel_down")),
+                            on_play=lambda: self.page.run_task(self._remote("play")),
+                            on_pause=lambda: self.page.run_task(self._remote("pause")),
+                            on_stop=lambda: self.page.run_task(self._remote("stop")),
+                            on_rewind=lambda: self.page.run_task(self._remote("rewind")),
+                            on_forward=lambda: self.page.run_task(self._remote("forward")),
+                            on_home=lambda: self.page.run_task(self._remote("home")),
+                            on_back=lambda: self.page.run_task(self._remote("back")),
                             on_close=self.hide_remote,
                         ),
                         alignment=ft.Alignment(0, 0),

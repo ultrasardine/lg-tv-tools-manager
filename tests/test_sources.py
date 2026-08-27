@@ -6,7 +6,6 @@ and the main enumerate_sources() function.
 
 from __future__ import annotations
 
-import shutil
 from unittest import mock
 
 from lgtvtools.mirror.models import CaptureSource
@@ -196,19 +195,19 @@ class TestEnumerateSources:
     """Tests for the main enumerate_sources function."""
 
     def test_returns_empty_when_ffmpeg_not_found(self) -> None:
-        with mock.patch.object(shutil, "which", return_value=None):
+        with mock.patch("lgtvtools.system.bundled.which", return_value=None):
             sources = enumerate_sources(Platform.MACOS)
         assert sources == []
 
     def test_returns_empty_for_unknown_platform(self) -> None:
-        with mock.patch.object(shutil, "which", return_value="/usr/bin/ffmpeg"):
+        with mock.patch("lgtvtools.system.bundled.which", return_value="/usr/bin/ffmpeg"):
             sources = enumerate_sources(Platform.UNKNOWN)
         assert sources == []
 
     def test_macos_calls_enumerate_macos_sources(self) -> None:
         expected = [CaptureSource(id="1", name="Capture screen 0", kind="screen")]
         with (
-            mock.patch.object(shutil, "which", return_value="/usr/bin/ffmpeg"),
+            mock.patch("lgtvtools.system.bundled.which", return_value="/usr/bin/ffmpeg"),
             mock.patch(
                 "lgtvtools.mirror.sources._enumerate_macos_sources",
                 return_value=expected,
@@ -220,7 +219,7 @@ class TestEnumerateSources:
     def test_debian_calls_enumerate_linux_sources(self) -> None:
         expected = [CaptureSource(id=":0.0", name="eDP-1 (1920x1080)", kind="screen")]
         with (
-            mock.patch.object(shutil, "which", return_value="/usr/bin/ffmpeg"),
+            mock.patch("lgtvtools.system.bundled.which", return_value="/usr/bin/ffmpeg"),
             mock.patch(
                 "lgtvtools.mirror.sources._enumerate_linux_sources",
                 return_value=expected,
@@ -232,7 +231,7 @@ class TestEnumerateSources:
     def test_rhel_calls_enumerate_linux_sources(self) -> None:
         expected = [CaptureSource(id=":0.0", name="eDP-1 (1920x1080)", kind="screen")]
         with (
-            mock.patch.object(shutil, "which", return_value="/usr/bin/ffmpeg"),
+            mock.patch("lgtvtools.system.bundled.which", return_value="/usr/bin/ffmpeg"),
             mock.patch(
                 "lgtvtools.mirror.sources._enumerate_linux_sources",
                 return_value=expected,
@@ -244,7 +243,7 @@ class TestEnumerateSources:
     def test_windows_calls_enumerate_windows_sources(self) -> None:
         expected = [CaptureSource(id="desktop", name="Entire Desktop", kind="screen")]
         with (
-            mock.patch.object(shutil, "which", return_value="/usr/bin/ffmpeg"),
+            mock.patch("lgtvtools.system.bundled.which", return_value="/usr/bin/ffmpeg"),
             mock.patch(
                 "lgtvtools.mirror.sources._enumerate_windows_sources",
                 return_value=expected,

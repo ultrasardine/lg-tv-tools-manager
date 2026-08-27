@@ -105,9 +105,12 @@ class DesktopActions:
 
         file_path = e.files[0].path
         if file_path:
-            self.page.run_task(
-                lambda: self._send_media_file(file_path, self._pending_media_type or "video")
-            )
+            media_type = self._pending_media_type or "video"
+
+            async def _do_send() -> None:
+                await self._send_media_file(file_path, media_type)
+
+            self.page.run_task(_do_send)
         self._pending_media_type = None
 
     async def _send_media_file(self, file_path: str, media_type: str) -> None:

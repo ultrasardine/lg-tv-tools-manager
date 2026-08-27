@@ -42,7 +42,7 @@ For detailed architecture documentation, see [docs/architecture-flet-migration.m
 - Automatic SSDP/DLNA + mDNS/Bonjour discovery (dual-protocol)
 - WebOS WebSocket pairing and direct TV control
 - Remote control interface (volume, channels, media playback, power)
-- Cast any URL to the TV's built-in browser
+- Cast URLs to the TV (YouTube via native app, media via native player, others via browser)
 - Diagnostic logging
 
 ### Desktop (macOS, Linux, Windows)
@@ -153,6 +153,26 @@ make run-qt
 # or: uv run lg-tv-tools-qt
 ```
 
+### Mobile Testing (iOS/Android)
+
+```bash
+# Debug on a connected iOS device (live reload)
+make run-ios
+# or: flet debug --device-id ios
+
+# Build iOS IPA for distribution
+make build-ios
+# or: flet build ipa --ios-team-id YOUR_TEAM_ID
+```
+
+The `main.py` at the project root serves as the Flet CLI entry point for mobile builds, delegating to the mobile-optimized app.
+
+Prerequisites for iOS:
+- Xcode 15+ installed
+- CocoaPods (`brew install cocoapods`)
+- Developer Mode enabled on iPhone (Settings > Privacy & Security > Developer Mode)
+- SSL fix: `curl -L -o /tmp/manifest.json https://github.com/flet-dev/python-build/releases/download/20260730/manifest.json`
+
 ### Environment Setup
 
 ```bash
@@ -212,7 +232,7 @@ Runtime logs are written to:
 The app communicates directly with LG webOS TVs via the SSAP WebSocket protocol (port 3001, SSL):
 
 1. **Pair TV** - One-time pairing: the TV shows a prompt, you accept, and the client key is stored locally for future use.
-2. **Cast URL** - Opens any URL in the TV's built-in web browser.
+2. **Cast URL** - Smart URL casting: YouTube links open in the native YouTube app, media URLs (mp4, m3u8, etc.) play in the TV's native media viewer, and other URLs open in the TV browser as fallback.
 3. **Remote Control** - Volume, mute, channel, media playback, and power controls.
 4. **Media playback** - Sends video/audio/image URLs to the TV's native media player.
 

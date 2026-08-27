@@ -5,17 +5,19 @@ as the capture/encode/mux backend. The captured content is served as an
 HLS stream to the TV's webOS browser via an embedded hls.js player.
 
 Architecture:
-    - Content is selected via ContentPicker dialog
     - CapturePipeline manages the ffmpeg subprocess
     - HLSServer serves the stream over HTTP
     - MirrorSession orchestrates the full lifecycle
-    - MirrorWorker runs the session on a background QThread
+
+Legacy Qt components (ContentPicker, MirrorWorker) require PyQt6 and are
+not imported by default. Import them directly if needed:
+    from lgtvtools.mirror.content_picker import ContentPicker
+    from lgtvtools.mirror.worker import MirrorWorker
 
 Typical usage:
-    from lgtvtools.mirror import MirrorSession, enumerate_sources, ContentPicker
+    from lgtvtools.mirror import MirrorSession, enumerate_sources
 
     sources = enumerate_sources()
-    # Show ContentPicker dialog to user...
     session = MirrorSession(device_ip="192.168.1.100", source=selected_source)
     result = session.start()
     # ... later ...
@@ -24,17 +26,13 @@ Typical usage:
 
 from __future__ import annotations
 
-from .content_picker import ContentPicker
 from .models import CaptureSource, MirrorState
 from .session import MirrorSession
 from .sources import enumerate_sources
-from .worker import MirrorWorker
 
 __all__ = [
     "CaptureSource",
-    "ContentPicker",
     "MirrorSession",
     "MirrorState",
-    "MirrorWorker",
     "enumerate_sources",
 ]
