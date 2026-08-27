@@ -43,21 +43,41 @@ fi
 # Get latest release download URL
 echo "Querying GitHub for latest ffmpeg-static release..."
 RELEASE_URL="https://api.github.com/repos/${REPO}/releases/latest"
-RELEASE_JSON=$(curl -sL "$RELEASE_URL")
+
+# Authenticate when a token is available (CI) to avoid API rate limits.
+# Use a plain string rather than an array for bash 3.2 (macOS) compatibility
+# under `set -u`.
+AUTH_HEADER=""
+if [ -n "${GITHUB_TOKEN:-}" ]; then
+    AUTH_HEADER="Authorization: Bearer ${GITHUB_TOKEN}"
+fi
+
+if [ -n "$AUTH_HEADER" ]; then
+    RELEASE_JSON=$(curl -sL -H "$AUTH_HEADER" -H "Accept: application/vnd.github+json" "$RELEASE_URL")
+else
+    RELEASE_JSON=$(curl -sL -H "Accept: application/vnd.github+json" "$RELEASE_URL")
+fi
 TAG=$(echo "$RELEASE_JSON" | grep -o '"tag_name": *"[^"]*"' | head -1 | cut -d'"' -f4)
+
+if [ -z "$TAG" ]; then
+    echo "ERROR: Could not resolve latest ffmpeg-static release tag." >&2
+    echo "GitHub API response (first 20 lines):" >&2
+    echo "$RELEASE_JSON" | head -20 >&2
+    exit 1
+fi
 echo "Latest version: $TAG"
 
 BASE_URL="https://github.com/${REPO}/releases/download/${TAG}"
 
-# Download ffmpeg
+# Download ffmpeg (--fail makes curl exit non-zero on HTTP errors like 404)
 echo "Downloading ${ASSET_FFMPEG}..."
-curl -sL -o "$OUTPUT_DIR/ffmpeg" "${BASE_URL}/${ASSET_FFMPEG}"
+curl -fsSL -o "$OUTPUT_DIR/ffmpeg" "${BASE_URL}/${ASSET_FFMPEG}"
 chmod +x "$OUTPUT_DIR/ffmpeg"
 echo "Installed: $OUTPUT_DIR/ffmpeg"
 
 # Download ffprobe
 echo "Downloading ${ASSET_FFPROBE}..."
-curl -sL -o "$OUTPUT_DIR/ffprobe" "${BASE_URL}/${ASSET_FFPROBE}"
+curl -fsSL -o "$OUTPUT_DIR/ffprobe" "${BASE_URL}/${ASSET_FFPROBE}"
 chmod +x "$OUTPUT_DIR/ffprobe"
 echo "Installed: $OUTPUT_DIR/ffprobe"
 

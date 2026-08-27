@@ -176,6 +176,8 @@ jobs:
       - name: Download ffmpeg for bundling (Unix)
         if: matrix.platform != 'windows'
         run: bash scripts/fetch_ffmpeg_unix.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build executable (Unix)
         if: matrix.platform != 'windows'
